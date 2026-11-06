@@ -36,4 +36,4 @@
 ## 7. 端到端驗證
 
 - [x] 7.1 本機完整跑一次:設定好 `.env` 的測試 webhook、`config.yaml` 填入一個目前 tixCraft 上真的有場次的藝人關鍵字,執行 `python -m src.main`,並在 Discord 測試頻道確認收到對應通知
-- [ ] 7.2(需使用者協助)在 GitHub 建立 repo、push 程式碼、設定 `DISCORD_WEBHOOK_URL` secret,手動觸發一次 `workflow_dispatch`,驗證 CI 執行成功且 `data/seen_events.json` 被 commit 回 repo
+- [x] 7.2(需使用者協助)在 GitHub 建立 repo、push 程式碼、設定 `DISCORD_WEBHOOK_URL` secret,手動觸發一次 `workflow_dispatch`,驗證 CI 執行成功且 `data/seen_events.json` 被 commit 回 repo
