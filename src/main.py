@@ -1,9 +1,10 @@
 import logging
 import os
 
-from .config import load_artists
+from .config import load_artists, load_consecutive_empty_threshold
+from .health import load_health, record_result, save_health
 from .matcher import match_events
-from .notifier import send_notification
+from .notifier import send_health_alert, send_notification
 from .scrapers import SCRAPERS
 from .state import load_seen_ids, save_seen_ids
 
@@ -20,8 +21,11 @@ def run() -> None:
     artists = load_artists()
 
     events = []
-    for scraper in SCRAPERS:
-        events.extend(scraper())
+    source_event_counts: dict[str, int] = {}
+    for source, fetch in SCRAPERS:
+        source_events = fetch()
+        source_event_counts[source] = len(source_events)
+        events.extend(source_events)
     logger.info("fetched %d events from %d source(s)", len(events), len(SCRAPERS))
 
     matches = match_events(artists, events)
@@ -45,6 +49,17 @@ def run() -> None:
         logger.info("recorded %d newly notified event(s)", len(newly_notified))
     else:
         logger.info("no new events to notify")
+
+    threshold = load_consecutive_empty_threshold()
+    health = load_health()
+    for source, count in source_event_counts.items():
+        if record_result(health, source, had_events=count > 0, threshold=threshold):
+            if send_health_alert(webhook_url, source, health[source]["consecutive_empty"]):
+                health[source]["alerted"] = True
+                logger.warning("sent health alert for source: %s", source)
+            else:
+                logger.warning("failed to send health alert for source: %s, will retry next run", source)
+    save_health(health)
 
 
 if __name__ == "__main__":

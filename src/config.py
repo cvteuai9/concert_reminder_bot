@@ -20,3 +20,10 @@ def load_artists(config_path: Path = DEFAULT_CONFIG_PATH) -> list[Artist]:
         Artist(name=item["name"], keywords=list(item["keywords"]))
         for item in data.get("artists", [])
     ]
+
+
+def load_consecutive_empty_threshold(config_path: Path = DEFAULT_CONFIG_PATH, default: int = 3) -> int:
+    with open(config_path, encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    return data.get("monitoring", {}).get("consecutive_empty_threshold", default)

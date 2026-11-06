@@ -1,3 +1,6 @@
 artists:
   - name: "動力火車"
     keywords: ["動力火車"]
+
+monitoring:
+  consecutive_empty_threshold: 3

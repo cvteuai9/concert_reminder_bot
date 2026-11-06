@@ -1,20 +1,14 @@
 from typing import Callable
 
+from . import ibon, kham, kktix, ticket_com_tw, ticketplus, tixcraft, udn
 from .base import Event
-from .ibon import fetch_events as fetch_ibon
-from .kham import fetch_events as fetch_kham
-from .kktix import fetch_events as fetch_kktix
-from .ticket_com_tw import fetch_events as fetch_ticket_com_tw
-from .ticketplus import fetch_events as fetch_ticketplus
-from .tixcraft import fetch_events as fetch_tixcraft
-from .udn import fetch_events as fetch_udn
 
-SCRAPERS: list[Callable[[], list[Event]]] = [
-    fetch_tixcraft,
-    fetch_ticket_com_tw,
-    fetch_udn,
-    fetch_kham,
-    fetch_kktix,
-    fetch_ticketplus,
-    fetch_ibon,
+SCRAPERS: list[tuple[str, Callable[[], list[Event]]]] = [
+    (tixcraft.SOURCE, tixcraft.fetch_events),
+    (ticket_com_tw.SOURCE, ticket_com_tw.fetch_events),
+    (udn.SOURCE, udn.fetch_events),
+    (kham.SOURCE, kham.fetch_events),
+    (kktix.SOURCE, kktix.fetch_events),
+    (ticketplus.SOURCE, ticketplus.fetch_events),
+    (ibon.SOURCE, ibon.fetch_events),
 ]
