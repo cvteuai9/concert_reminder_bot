@@ -1,0 +1,30 @@
+{
+  "tixcraft": {
+    "consecutive_empty": 1,
+    "alerted": false
+  },
+  "ticket.com.tw": {
+    "consecutive_empty": 0,
+    "alerted": false
+  },
+  "udn": {
+    "consecutive_empty": 0,
+    "alerted": false
+  },
+  "kham": {
+    "consecutive_empty": 0,
+    "alerted": false
+  },
+  "kktix": {
+    "consecutive_empty": 1,
+    "alerted": false
+  },
+  "ticketplus": {
+    "consecutive_empty": 1,
+    "alerted": false
+  },
+  "ibon": {
+    "consecutive_empty": 0,
+    "alerted": false
+  }
+}
