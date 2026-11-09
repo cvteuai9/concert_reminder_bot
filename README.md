@@ -33,7 +33,7 @@ artists:
 
 1. 建立 GitHub repo 並 push 這個專案。
 2. 到 repo 的 Settings → Secrets and variables → Actions,新增 secret `DISCORD_WEBHOOK_URL`。
-3. `.github/workflows/check_concerts.yml` 預設每 30 分鐘自動執行一次,也可以到 Actions 頁面手動觸發(`workflow_dispatch`)測試。
+3. `.github/workflows/check_concerts.yml` 預設每小時自動執行一次(GitHub Actions 對分鐘等級的排程不保證準時,甚至可能跳過,每小時比較符合實際行為),也可以到 Actions 頁面手動觸發(`workflow_dispatch`)測試。
 4. 每次執行後,若有新通知,`data/seen_events.json` 會被自動 commit 回 repo,用來記住哪些場次已經通知過,避免重複通知。
 
 ## 新增其他售票平台
