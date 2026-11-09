@@ -36,9 +36,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet -- data/seen_events.json; then
-            git add data/seen_events.json
-            git commit -m "chore: update seen events state"
+          git add data/seen_events.json data/source_health.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update seen events and source health state"
             git push
           else
             echo "No state changes to commit"
