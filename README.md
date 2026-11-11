@@ -37,14 +37,15 @@ monitoring:
 tixCraft、KKTIX、遠大售票(Ticket Plus)這三個平台的防護機制會擋掉 GitHub Actions 虛擬機的雲端 IP,但家用網路的 IP 不會被擋,所以排程改成在本機用 Windows 工作排程器執行,不再依賴 GitHub Actions 的 `schedule`(`.github/workflows/check_concerts.yml` 現在只保留 `workflow_dispatch`,當作需要時的手動雲端測試工具,不會自動執行)。
 
 1. 確保 `.venv` 已建立、套件已安裝(見上方「本機執行」),且 `.env` 已填好 `DISCORD_WEBHOOK_URL`。
-2. 用 PowerShell 註冊排程工作(已經幫你註冊好一次,之後要重建可以用這段):
+2. 用 PowerShell 註冊排程工作(已經幫你註冊好一次,目前設定是每天台灣時間凌晨 5 點執行一次;之後要重建可以用這段):
    ```powershell
    $ScriptPath = "C:\Users\cvtey\concert_reminder\run_check.ps1"
    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptPath`""
-   $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 3650)
+   $trigger = New-ScheduledTaskTrigger -Daily -At "5:00AM"
    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -DontStopOnIdleEnd -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
-   Register-ScheduledTask -TaskName "ConcertReminderCheck" -Action $action -Trigger $trigger -Settings $settings -Description "Run concert_reminder's hourly check (src/main.py) locally"
+   Register-ScheduledTask -TaskName "ConcertReminderCheck" -Action $action -Trigger $trigger -Settings $settings -Description "Run concert_reminder's daily check (src/main.py) locally"
    ```
+   想改成其他頻率(例如每小時),只要換成 `New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Days 3650)` 再用 `Set-ScheduledTask -TaskName "ConcertReminderCheck" -Trigger $trigger` 更新既有工作,不用整個刪掉重建。
 3. 查詢狀態、手動觸發一次測試、或移除排程:
    ```powershell
    Get-ScheduledTask -TaskName "ConcertReminderCheck"
@@ -55,11 +56,11 @@ tixCraft、KKTIX、遠大售票(Ticket Plus)這三個平台的防護機制會擋
 4. 每次執行(排程或手動觸發)的輸出都會附加寫入 `logs/run.log`,可以打開這個檔案看最近幾次有沒有抓到活動、有沒有發通知、有沒有平台健康告警。
 5. `data/seen_events.json`、`data/source_health.json` 現在是純本機檔案(已加進 `.gitignore`,不再進 git),同一台機器重複執行會自動讀到上次留下的狀態。
 
-**前提**:排定的時間點電腦要是開機、連網的狀態才會執行(已設定 `WakeToRun`,電腦若是睡眠會嘗試喚醒,但關機或登出不會);如果電腦當時沒開,那次就會跳過,等電腦恢復上線或下一個整點再執行,不會補發錯過的通知。
+**前提**:排定的時間點電腦要是開機、連網的狀態才會執行(已設定 `WakeToRun`,電腦若是睡眠會嘗試喚醒,但關機或登出不會);如果電腦當時沒開,那次就會跳過,等電腦恢復上線或等到下一天凌晨 5 點再執行,不會補發錯過的通知。
 
 ## 平台失敗告警
 
-每個 scraper 都會把請求/解析錯誤包在 try/except 裡,單一平台失敗不會讓整個流程中斷,但也代表它會悄悄回傳空清單。系統會記錄每個平台「連續幾次沒抓到任何活動」(`data/source_health.json`),達到 `config.yaml` 設定的門檻(預設 3 次)就會發一則 Discord 告警,提醒你該平台可能需要檢查。同一輪失效只會告警一次,等該平台恢復抓到資料後,下次再失效才會重新觸發。
+每個 scraper 都會把請求/解析錯誤包在 try/except 裡,單一平台失敗不會讓整個流程中斷,但也代表它會悄悄回傳空清單。系統會記錄每個平台「連續幾次沒抓到任何活動」(`data/source_health.json`),達到 `config.yaml` 設定的門檻(預設 3 次)就會發一則 Discord 告警,提醒你該平台可能需要檢查。同一輪失效只會告警一次,等該平台恢復抓到資料後,下次再失效才會重新觸發。**注意**:排程改成每天一次後,「連續 3 次」代表連續 3 天,從發現問題到告警可能要等上 2-3 天;如果想要更快知道平台壞掉,可以把門檻調低(例如改成 1 或 2)。
 
 ## 新增其他售票平台
 
