@@ -1,16 +1,12 @@
 name: Check Concerts
 
+# Manual-only: the real schedule now runs locally (see run_check.ps1 +
+# Windows Task Scheduler) so requests come from a home IP instead of
+# GitHub's, which tixCraft/KKTIX/Ticket Plus block. This workflow is kept
+# as an ad-hoc debugging tool, not a persistent execution path - it does
+# not commit state back, since data/*.json are local-only (gitignored).
 on:
-  schedule:
-    - cron: "0 * * * *"
   workflow_dispatch: {}
-
-permissions:
-  contents: write
-
-concurrency:
-  group: check-concerts
-  cancel-in-progress: false
 
 jobs:
   check:
@@ -31,15 +27,3 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python -m src.main
-
-      - name: Commit updated state
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/seen_events.json data/source_health.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: update seen events and source health state"
-            git push
-          else
-            echo "No state changes to commit"
-          fi
