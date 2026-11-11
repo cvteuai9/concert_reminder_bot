@@ -7,4 +7,4 @@ artists:
     keywords: ["甜約翰"]
 
 monitoring:
-  consecutive_empty_threshold: 3
+  consecutive_empty_threshold: 2
