@@ -37,13 +37,14 @@ def _parse_events(html: str) -> list[Event]:
     events: dict[str, Event] = {}
 
     for card in soup.select("div.yd_card"):
-        link = card.select_one("a[href*='PRODUCT_ID=']")
-        title_el = card.select_one(".yd_card-title")
+        link = card.select_one("a[href*='PRODUCT_ID=']") or card.select_one("a[href*='AGId=']")
+        title_el = card.select_one(".yd_card-title") or card.select_one(".yd_card-text")
         if link is None or title_el is None:
             continue
 
         href = link.get("href", "")
-        event_id = href.split("PRODUCT_ID=")[-1].split("&")[0]
+        param = "PRODUCT_ID=" if "PRODUCT_ID=" in href else "AGId="
+        event_id = href.split(param)[-1].split("&")[0]
         title = title_el.get_text(strip=True)
         if not event_id or not title or event_id in events:
             continue

@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -8,7 +9,7 @@ from .base import Event
 logger = logging.getLogger(__name__)
 
 SOURCE = "ticket.com.tw"
-LIST_URL = "https://ticket.com.tw/application/UTK02/UTK0201_.aspx"
+LIST_URL = "https://ticket.com.tw/application/UTK01/UTK0101_06.aspx?TYPE=1&CATEGORY=205"
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -26,46 +27,37 @@ def fetch_events() -> list[Event]:
         return []
 
     try:
-        return _parse_events(response.text)
+        return _parse_events(response.text, response.url)
     except Exception as exc:  # noqa: BLE001 - keep one source from breaking the whole run
         logger.warning("ticket.com.tw: failed to parse activity list: %s", exc)
         return []
 
 
-def _parse_events(html: str) -> list[Event]:
+def _parse_events(html: str, base_url: str) -> list[Event]:
     soup = BeautifulSoup(html, "html.parser")
     events: dict[str, Event] = {}
 
-    for link in soup.select("div.portfolio-item a.portfolio-link[href*='PRODUCT_ID=']"):
-        _add_event(events, link, title_el=link.select_one("h4"), date_el=link.select_one("p.text-muted"))
+    for card in soup.select("div.moreBox"):
+        link = card.select_one("a[href*='PRODUCT_ID=']")
+        title_el = card.select_one(".list-group-item-heading")
+        if link is None or title_el is None:
+            continue
 
-    for link in soup.select("div.wrap a[href*='PRODUCT_ID=']"):
-        caption = link.find_next_sibling("div", class_="caption")
-        title_el = caption.select_one("h3") if caption else None
-        date_el = caption.select_one("p") if caption else None
-        _add_event(events, link, title_el=title_el, date_el=date_el)
+        href = link.get("href", "")
+        event_id = href.split("PRODUCT_ID=")[-1].split("&")[0]
+        title = title_el.get_text(strip=True)
+        if not event_id or not title or event_id in events:
+            continue
+
+        date_el = card.select_one(".list-group-item-date")
+
+        events[event_id] = Event(
+            source=SOURCE,
+            id=event_id,
+            title=title,
+            url=urljoin(base_url, href),
+            date=date_el.get_text(strip=True) if date_el else None,
+            venue=None,
+        )
 
     return list(events.values())
-
-
-def _add_event(events: dict[str, Event], link, title_el, date_el) -> None:
-    href = link.get("href", "")
-    if "PRODUCT_ID=" not in href:
-        return
-
-    event_id = href.split("PRODUCT_ID=")[-1].split("&")[0]
-    if not event_id or event_id in events:
-        return
-
-    title = title_el.get_text(strip=True) if title_el else None
-    if not title:
-        return
-
-    events[event_id] = Event(
-        source=SOURCE,
-        id=event_id,
-        title=title,
-        url=href,
-        date=date_el.get_text(strip=True) if date_el else None,
-        venue=None,
-    )
