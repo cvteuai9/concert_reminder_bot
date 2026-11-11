@@ -1,6 +1,10 @@
 artists:
   - name: "動力火車"
     keywords: ["動力火車"]
+  - name: "芒果醬"
+    keywords: ["芒果醬"]
+  - name: "甜約翰"
+    keywords: ["甜約翰"]
 
 monitoring:
   consecutive_empty_threshold: 3
