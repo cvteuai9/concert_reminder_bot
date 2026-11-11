@@ -1,6 +1,6 @@
 {
   "tixcraft": {
-    "consecutive_empty": 5,
+    "consecutive_empty": 6,
     "alerted": true
   },
   "ticket.com.tw": {
@@ -16,11 +16,11 @@
     "alerted": false
   },
   "kktix": {
-    "consecutive_empty": 5,
+    "consecutive_empty": 6,
     "alerted": true
   },
   "ticketplus": {
-    "consecutive_empty": 5,
+    "consecutive_empty": 6,
     "alerted": true
   },
   "ibon": {
